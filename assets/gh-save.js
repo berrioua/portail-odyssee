@@ -21,7 +21,18 @@ const ODY_GH_REPO = "portail-odyssee";
  * @param {string} html - contenu HTML complet à enregistrer
  * @returns {Promise<void>}
  */
+window.__ODY_SAVING__ = false;
+
+window.addEventListener("beforeunload", function (e) {
+  if (window.__ODY_SAVING__) {
+    e.preventDefault();
+    e.returnValue = "Un enregistrement est en cours. Si tu quittes maintenant, tes données ne seront pas sauvegardées.";
+    return e.returnValue;
+  }
+});
+
 function odySaveToGitHub(filePath, html) {
+  window.__ODY_SAVING__ = true;
   var apiUrl = "https://api.github.com/repos/" + ODY_GH_USER + "/" + ODY_GH_REPO + "/contents/" + filePath;
   return fetch(apiUrl, {
     headers: { "Authorization": "token " + ODY_GH_TOKEN, "Accept": "application/vnd.github.v3+json" }
@@ -41,7 +52,12 @@ function odySaveToGitHub(filePath, html) {
     });
   })
   .then(function (r) {
+    window.__ODY_SAVING__ = false;
     if (!r.ok) { return r.json().then(function(d){ throw new Error(d.message || "Erreur GitHub"); }); }
     return r.json();
+  })
+  .catch(function (err) {
+    window.__ODY_SAVING__ = false;
+    throw err;
   });
 }
