@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <script src="../assets/auth.js"></script>
+<script src="../assets/gh-save.js"></script>
 <script>
   var __session = odyGetSession();
   if (!__session) { window.location.replace("../login.html"); }
@@ -1423,13 +1424,23 @@ window.printRapport=function(){
 
 // ── SAVE ─────────────────────────────────────────────────────────────────────
 window.saveDashboard=function(){
+  var btn=document.querySelector('.sb-save');
+  if(btn){btn.style.opacity='0.6';btn.innerHTML=btn.innerHTML.replace('Enregistrer','Envoi...');}
   var html=document.documentElement.outerHTML;
   var inj='<script>window.__GD__='+JSON.stringify(ALL)+';<\/script>';
   html=html.replace('</head>',inj+'</head>');
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
-  a.download='Dashboard_Gaz_Propane_ORCA_'+new Date().toISOString().substring(0,10)+'.html';
-  a.click();setSt('✓ Enregistré localement');
+  odySaveToGitHub('dashboards/gaz-propane.html', html)
+  .then(function(){
+    setSt('✓ Enregistré et publié');
+    if(btn){
+      btn.innerHTML=btn.innerHTML.replace('Envoi...','Enregistré !');
+      setTimeout(function(){btn.innerHTML=btn.innerHTML.replace('Enregistré !','Enregistrer');btn.style.opacity='';},3000);
+    }
+  })
+  .catch(function(err){
+    if(btn){btn.innerHTML=btn.innerHTML.replace('Envoi...','Enregistrer');btn.style.opacity='';}
+    setSt('✗ Erreur: '+(err.message||''));
+  });
 };
 
 // ── RESTORE ──────────────────────────────────────────────────────────────────

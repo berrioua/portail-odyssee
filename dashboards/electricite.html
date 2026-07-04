@@ -2,10 +2,12 @@
 <html lang="fr">
 <head>
 <script src="../assets/auth.js"></script>
+<script src="../assets/gh-save.js"></script>
 <script>
   var __session = odyGetSession();
   if (!__session) { window.location.replace("../login.html"); }
 </script>
+<style>header{top:38px !important;}</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi Compteurs Électriques</title>
@@ -240,7 +242,7 @@ tr:hover td{background:#fafafa}
     </div>
   </div>
   <div class="hactions">
-    <button class="btn btn-green btn-sm" id="btnSave" onclick="saveLocal(true)" style="display:none">💾 Enregistrer</button>
+    <button class="btn btn-green btn-sm" id="btnSave" onclick="saveToGitHub(this)" style="display:none">💾 Enregistrer</button>
     <div class="undo-group">
       <button id="btnUndo" onclick="undo()" disabled title="Annuler (Ctrl+Z)">↩ Annuler</button>
       <button id="btnRedo" onclick="redo()" disabled title="Rétablir (Ctrl+Y)">Rétablir ↪</button>
@@ -276,7 +278,7 @@ tr:hover td{background:#fafafa}
   <!-- UNSAVED BANNER -->
   <div class="unsaved-banner hidden" id="unsavedBanner">
     <span>⚠️ Modifications non enregistrées.</span>
-    <button class="btn btn-green btn-sm" onclick="saveLocal(true)">💾 Enregistrer</button>
+    <button class="btn btn-green btn-sm" onclick="saveToGitHub(this)">💾 Enregistrer</button>
   </div>
 
   <!-- FILTERS -->
@@ -671,6 +673,23 @@ function saveLocal(notify = false) {
     $('btnSave').style.display = 'none';
     if (notify) toast('Données enregistrées !', 's');
   } catch(e) { toast('Erreur de sauvegarde.', 'e'); }
+}
+
+function saveToGitHub(btnEl) {
+  saveLocal(false);
+  if (btnEl) { btnEl.disabled = true; btnEl.dataset.orig = btnEl.innerHTML; btnEl.innerHTML = '💾 Envoi...'; }
+  var html = document.documentElement.outerHTML;
+  var inj = '<script>window.__ED__=' + JSON.stringify(allData) + ';<\/script>';
+  html = html.replace('</head>', inj + '</head>');
+  odySaveToGitHub('dashboards/electricite.html', html)
+  .then(function () {
+    toast('Données publiées ! Visibles par tous dans 1-2 minutes.', 's');
+    if (btnEl) { btnEl.innerHTML = '✅ Enregistré !'; setTimeout(function(){ btnEl.innerHTML = btnEl.dataset.orig; btnEl.disabled = false; }, 3000); }
+  })
+  .catch(function (err) {
+    toast('Erreur GitHub: ' + (err.message || ''), 'e');
+    if (btnEl) { btnEl.innerHTML = btnEl.dataset.orig; btnEl.disabled = false; }
+  });
 }
 
 function markUnsaved() {
@@ -1755,14 +1774,14 @@ document.addEventListener('keydown', e => {
 // Remplir les selects de compteurs au chargement
 fillCompSelects();
 
-const saved = loadLocal();
+const saved = (typeof window.__ED__ !== 'undefined' && window.__ED__ && window.__ED__.length) ? window.__ED__ : loadLocal();
 if (saved && saved.length) {
   allData = saved; filtered = [...allData];
   // Initialiser l'historique avec l'état chargé
   history = [JSON.stringify(allData)]; historyIdx = 0;
   updateUndoRedo();
   showDash(); populateFilters(); applyFilters();
-  setMsg(`${saved.length} relevé(s) depuis la mémoire locale`);
+  setMsg(`${saved.length} relevé(s) chargé(s)`);
 }
 
 

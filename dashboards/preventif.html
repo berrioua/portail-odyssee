@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <script src="../assets/auth.js"></script>
+<script src="../assets/gh-save.js"></script>
 <script>
   var __session = odyGetSession();
   if (!__session) { window.location.replace("../login.html"); }
@@ -1597,41 +1598,20 @@ function sauvegarderLocalement(){
     btn.style.opacity='0.6';
     btn.innerHTML=btn.innerHTML.replace('Enregistrer','Envoi...');
   }
-  // Recuperer le SHA du fichier actuel sur GitHub
-  var GITHUB_TOKEN=['ghp_tNC1anfYmYg','SFomERTmj4DO','khWU4sD46Jseh'].join('');
-  var GITHUB_USER='berrioua';
-  var GITHUB_REPO='maintenance-dashboard';
-  var GITHUB_FILE='index.html';
-  var apiUrl='https://api.github.com/repos/'+GITHUB_USER+'/'+GITHUB_REPO+'/contents/'+GITHUB_FILE;
-  // Step 1: get current SHA
-  fetch(apiUrl,{mode:'cors',headers:{'Authorization':'token '+GITHUB_TOKEN,'Accept':'application/vnd.github.v3+json'}})
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var sha=data.sha;
-    // Step 2: get current HTML and inject updated ATELIERS
-    var html=document.documentElement.outerHTML;
-    var marker1='\x2f\x2a__SAVE_START__\x2a\x2f';
-    var marker2='\x2f\x2a__SAVE_END__\x2a\x2f';
-    var i1=html.indexOf(marker1);
-    var i2=html.indexOf(marker2);
-    var newHtml;
-    if(i1!==-1&&i2!==-1){
-      newHtml=html.substring(0,i1+marker1.length)+'\nvar ATELIERS='+JSON.stringify(ATELIERS,null,0).replace(/[\u0080-\uFFFF]/g,function(c){return "\\u"+c.charCodeAt(0).toString(16).padStart(4,"0");})+';\n'+html.substring(i2);
-    } else {
-      newHtml=html;
-    }
-    // Step 3: encode to base64
-    var encoded=btoa(unescape(encodeURIComponent(newHtml)));
-    // Step 4: push to GitHub
-    return fetch(apiUrl,{
-      method:'PUT',
-      headers:{'Authorization':'token '+GITHUB_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify({message:'Mise a jour dashboard '+new Date().toLocaleString('fr-FR'),content:encoded,sha:sha})
-    });
-  })
-  .then(function(r){
+  var html=document.documentElement.outerHTML;
+  var marker1='\x2f\x2a__SAVE_START__\x2a\x2f';
+  var marker2='\x2f\x2a__SAVE_END__\x2a\x2f';
+  var i1=html.indexOf(marker1);
+  var i2=html.indexOf(marker2);
+  var newHtml;
+  if(i1!==-1&&i2!==-1){
+    newHtml=html.substring(0,i1+marker1.length)+'\nvar ATELIERS='+JSON.stringify(ATELIERS,null,0).replace(/[\u0080-\uFFFF]/g,function(c){return "\\u"+c.charCodeAt(0).toString(16).padStart(4,"0");})+';\n'+html.substring(i2);
+  } else {
+    newHtml=html;
+  }
+  odySaveToGitHub('dashboards/preventif.html', newHtml)
+  .then(function(){
     if(btn){
-      
       btn.style.background='#EAF3DE';
       btn.style.borderColor='#639922';
       btn.style.color='#27500A';

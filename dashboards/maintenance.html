@@ -1,5 +1,6 @@
 <html lang="fr"><head>
 <script src="../assets/auth.js"></script>
+<script src="../assets/gh-save.js"></script>
 <script>
   var __session = odyGetSession();
   if (!__session) { window.location.replace("../login.html"); }
@@ -2243,10 +2244,23 @@ function saveToLocalStorage(){
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     const btn = document.getElementById('btn-save-local');
     const orig = btn.innerHTML;
-    btn.innerHTML = '✅ Enregistré !';
-    btn.classList.add('saved');
-    setTimeout(()=>{ btn.innerHTML = orig; btn.classList.remove('saved'); }, 2000);
-    showSaveNotification(state.savedAt);
+    btn.innerHTML = '⏳ Publication...';
+    btn.disabled = true;
+    var html = document.documentElement.outerHTML;
+    var inj = '<script>window.__MD__=' + JSON.stringify({data: ALL, obj: OBJ}) + ';<\/script>';
+    html = html.replace('</head>', inj + '</head>');
+    odySaveToGitHub('dashboards/maintenance.html', html)
+    .then(function () {
+      btn.innerHTML = '✅ Enregistré !';
+      btn.classList.add('saved');
+      showSaveNotification(state.savedAt);
+      setTimeout(()=>{ btn.innerHTML = orig; btn.classList.remove('saved'); btn.disabled = false; }, 2500);
+    })
+    .catch(function (err) {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      alert('Erreur publication GitHub : ' + (err.message || ''));
+    });
   } catch(e) {
     if(e.name === 'QuotaExceededError') {
       alert('❌ Espace localStorage insuffisant.\nVeuillez utiliser le bouton ⬇️ Télécharger pour sauvegarder une copie HTML locale.');
@@ -2258,6 +2272,11 @@ function saveToLocalStorage(){
 
 function loadFromLocalStorage(){
   try {
+    if (typeof window.__MD__ !== 'undefined' && window.__MD__ && window.__MD__.data && window.__MD__.data.length) {
+      ALL = window.__MD__.data;
+      if (window.__MD__.obj) Object.assign(OBJ, window.__MD__.obj);
+      return new Date().toISOString();
+    }
     const raw = localStorage.getItem(LS_KEY);
     if(!raw) return false;
     const state = JSON.parse(raw);
