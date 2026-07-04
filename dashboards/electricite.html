@@ -678,9 +678,16 @@ function saveLocal(notify = false) {
 function saveToGitHub(btnEl) {
   saveLocal(false);
   if (btnEl) { btnEl.disabled = true; btnEl.dataset.orig = btnEl.innerHTML; btnEl.innerHTML = '💾 Envoi...'; }
-  var html = document.documentElement.outerHTML;
-  var inj = '<script>window.__ED__=' + JSON.stringify(allData) + ';<\/script>';
-  html = html.replace('</head>', inj + '</head>');
+  var html;
+  try {
+    html = document.documentElement.outerHTML;
+    var inj = '<script>window.__ED__=' + JSON.stringify(allData) + ';<\/script>';
+    html = html.replace('</head>', inj + '</head>');
+  } catch (buildErr) {
+    if (btnEl) { btnEl.innerHTML = btnEl.dataset.orig; btnEl.disabled = false; }
+    odyShowBanner('✗ Erreur avant envoi: ' + (buildErr.message || ''), true, true);
+    return;
+  }
   odySaveToGitHub('dashboards/electricite.html', html)
   .then(function () {
     toast('Données publiées ! Visibles par tous dans 1-2 minutes.', 's');

@@ -1425,10 +1425,16 @@ window.printRapport=function(){
 // ── SAVE ─────────────────────────────────────────────────────────────────────
 window.saveDashboard=function(){
   var btn=document.querySelector('.sb-save');
-  if(btn){btn.style.opacity='0.6';btn.innerHTML=btn.innerHTML.replace('Enregistrer','Envoi...');}
-  var html=document.documentElement.outerHTML;
-  var inj='<script>window.__GD__='+JSON.stringify(ALL)+';<\/script>';
-  html=html.replace('</head>',inj+'</head>');
+  try{
+    if(btn){btn.style.opacity='0.6';btn.innerHTML=btn.innerHTML.replace('Enregistrer','Envoi...');}
+    var html=document.documentElement.outerHTML;
+    var inj='<script>window.__GD__='+JSON.stringify(ALL)+';<\/script>';
+    html=html.replace('</head>',inj+'</head>');
+  }catch(buildErr){
+    if(btn){btn.innerHTML=btn.innerHTML.replace('Envoi...','Enregistrer');btn.style.opacity='';}
+    odyShowBanner('✗ Erreur avant envoi: '+(buildErr.message||''), true, true);
+    return;
+  }
   odySaveToGitHub('dashboards/gaz-propane.html', html)
   .then(function(){
     setSt('✓ Enregistré et publié');
