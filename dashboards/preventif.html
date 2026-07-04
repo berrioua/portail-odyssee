@@ -3,6 +3,7 @@
 <head>
 <script src="../assets/auth.js"></script>
 <script src="../assets/gh-save.js"></script>
+<script>function odySaveHandler(){ sauvegarderLocalement(); }</script>
 <script>
   var __session = odyGetSession();
   if (!__session) { window.location.replace("../login.html"); }
@@ -216,7 +217,10 @@ h1.ptitle{font-size:19px;font-weight:700;margin-bottom:3px}
     <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
     Portail Odyssée
   </a>
-  <button onclick="odyLogout(); window.location.href='../login.html';" style="background:transparent;border:1px solid #2E3B4C;color:#8B96A5;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;border-radius:5px;cursor:pointer;">Déconnexion</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button id="ody-save-btn" onclick="odySaveHandler(this)" style="background:#E8590C;border:none;color:#fff;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;padding:6px 14px;border-radius:5px;cursor:pointer;">💾 Enregistrer</button>
+    <button onclick="odyLogout(); window.location.href='../login.html';" style="background:transparent;border:1px solid #2E3B4C;color:#8B96A5;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;border-radius:5px;cursor:pointer;">Déconnexion</button>
+  </div>
 </div>
 <style>
   body{padding-top:38px !important;}
