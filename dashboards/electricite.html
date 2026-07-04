@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script src="../assets/auth.js"></script>
+<script>
+  var __session = odyGetSession();
+  if (!__session) { window.location.replace("../login.html"); }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Compteurs Électriques</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6f9;color:#1a1a2e;font-family:'Montserrat',system-ui,sans-serif;min-height:100vh}
+
+/* HEADER */
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:#1a1a2e;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#f5a623;font-size:16px;flex-shrink:0}
+.logo h1{font-size:14px;font-weight:700;color:#1a1a2e}
+.logo span{font-size:11px;color:#6b7280;display:block}
+.hactions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;font-family:'Montserrat',sans-serif}
+.btn-dark{background:#1a1a2e;color:#fff}.btn-dark:hover{background:#2d2d4e}
+.btn-accent{background:#f5a623;color:#1a1a2e}.btn-accent:hover{opacity:.85}
+.btn-outline{background:#fff;border:1.5px solid #e5e7eb;color:#374151}.btn-outline:hover{border-color:#1a1a2e}
+.btn-green{background:#16a34a;color:#fff}.btn-green:hover{background:#15803d}
+.btn-purple{background:#7c3aed;color:#fff}.btn-purple:hover{background:#6d28d9}
+.btn-red{background:#fff;border:1.5px solid #fecaca;color:#dc2626}.btn-red:hover{background:#fef2f2}
+.btn-gray{background:#fff;border:1.5px solid #e5e7eb;color:#374151}.btn-gray:hover{background:#f3f4f6}.btn-gray:disabled{opacity:.3;cursor:not-allowed}
+.btn-sm{padding:6px 12px;font-size:11px}
+.undo-group{display:flex;border:1.5px solid #e5e7eb;border-radius:7px;overflow:hidden}
+.undo-group button{background:#fff;border:none;border-right:1px solid #e5e7eb;padding:6px 11px;font-size:11px;cursor:pointer;transition:all .15s;font-family:'Montserrat',sans-serif;color:#374151;font-weight:600}
+.undo-group button:last-child{border-right:none}
+.undo-group button:hover:not(:disabled){background:#f3f4f6}
+.undo-group button:disabled{opacity:.3;cursor:not-allowed}
+
+/* IMPORT ZONE */
+.import-zone{background:#fff;border:2px dashed #d1d5db;border-radius:12px;padding:28px 24px;text-align:center;margin:18px 24px 0;transition:border-color .2s,background .2s}
+.import-zone.drag-over{border-color:#f5a623;background:#fffbf0}
+.import-zone.compact{padding:10px 18px;text-align:left;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1px solid #e5e7eb;border-radius:9px;border-style:solid}
+.iz-hero .icon{font-size:30px;margin-bottom:9px}
+.iz-hero h3{font-size:14px;font-weight:700;margin-bottom:5px}
+.iz-hero p{font-size:11px;color:#6b7280;margin-bottom:14px;line-height:1.6}
+.iz-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
+.import-info{font-size:12px;color:#374151}
+.import-info strong{color:#16a34a}
+#fileInput,#fileInput2{display:none}
+
+/* MAIN */
+main{padding:16px 24px 28px}
+
+/* UNSAVED BANNER */
+.unsaved-banner{background:#fffbeb;border:1px solid #fde68a;border-radius:7px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-size:12px;color:#92400e;gap:8px}
+.unsaved-banner.hidden{display:none}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border:1px solid #e5e7eb;border-radius:9px;padding:11px 15px;display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:16px}
+.flabel{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.fgroup{display:flex;align-items:center;gap:5px}
+select,input[type="date"],input[type="text"],input[type="number"]{background:#f9fafb;border:1px solid #e5e7eb;color:#1a1a2e;border-radius:6px;padding:6px 10px;font-size:12px;font-family:'Montserrat',sans-serif;outline:none;cursor:pointer;transition:border-color .15s}
+select:focus,input[type="date"]:focus,input[type="text"]:focus,input[type="number"]:focus{border-color:#f5a623;box-shadow:0 0 0 2px rgba(245,166,35,.1)}
+.period-toggle{display:flex;border:1px solid #e5e7eb;border-radius:7px;overflow:hidden}
+.ptbtn{background:#fff;border:none;padding:5px 12px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;transition:all .15s;font-family:'Montserrat',sans-serif}
+.ptbtn.active{background:#1a1a2e;color:#fff}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:11px;margin-bottom:16px}
+.kpi-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.kpi-o::after{background:#f5a623}.kpi-b::after{background:#3b82f6}.kpi-g::after{background:#22c55e}.kpi-gr::after{background:#6b7280}
+.kpi-lbl{font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.kpi-o .kpi-val{color:#d97706}.kpi-b .kpi-val{color:#2563eb}.kpi-g .kpi-val{color:#16a34a}.kpi-gr .kpi-val{color:#374151}
+.kpi-sub{font-size:10px;color:#9ca3af;margin-top:3px}
+
+/* CHARTS */
+.charts-col{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:11px;padding:16px}
+.ct{font-size:13px;font-weight:700;color:#1a1a2e}
+.cs{font-size:10px;color:#9ca3af;margin-top:2px;margin-bottom:14px}
+.chart-wrap{position:relative;height:220px}
+.chart-wrap.tall{height:270px}
+.chart-wrap.sm{height:190px}
+.chart-general{border:2px solid #e0e7ff;background:linear-gradient(135deg,#f8faff 0%,#fff 100%)}
+.badge-gen{background:#1a1a2e;color:#f5a623;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;margin-right:6px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.grid-2{grid-template-columns:1fr}}
+
+/* ANALYSIS CARDS */
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px}
+.a-card{background:#fff;border:1px solid #e5e7eb;border-radius:11px;padding:15px}
+.a-card h4{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:11px}
+.a-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6}
+.a-row:last-child{border-bottom:none}
+.a-name{font-size:11px;color:#4b5563;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.a-val{font-size:12px;font-weight:700;white-space:nowrap}
+.bar-bg{margin-top:3px;height:3px;background:#f3f4f6;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* TABLE */
+.table-card{background:#fff;border:1px solid #e5e7eb;border-radius:11px;padding:16px;margin-bottom:16px}
+.th-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;flex-wrap:wrap;gap:7px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;border-bottom:1.5px solid #f3f4f6;font-family:'Montserrat',sans-serif}
+td{padding:8px 10px;font-size:12px;border-bottom:1px solid #f9fafb;color:#1a1a2e}
+tr:nth-child(even) td{background:#F8F8F6}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+.tg{background:#fef3c7;color:#92400e}.tb{background:#dbeafe;color:#1e40af}.tc{background:#dcfce7;color:#166534}.to{background:#f3f4f6;color:#374151}
+.del-btn{background:none;border:none;cursor:pointer;color:#d1d5db;font-size:12px;padding:2px 5px;border-radius:4px;transition:all .15s}
+.del-btn:hover{background:#fee2e2;color:#dc2626}
+.edit-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;transition:all .15s;opacity:.5}
+.edit-btn:hover{background:#eff6ff;opacity:1}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:13px;padding:22px;width:460px;max-width:95vw;box-shadow:0 16px 48px rgba(0,0,0,.12);animation:mup .17s ease}
+.modal-wide{width:700px;max-height:88vh;overflow-y:auto}
+@keyframes mup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.modal h3{font-size:14px;font-weight:700;margin-bottom:16px}
+.form-row{margin-bottom:11px}
+.form-row label{display:block;font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.form-row input,.form-row select{width:100%;background:#f9fafb;border:1px solid #e5e7eb;color:#1a1a2e;border-radius:6px;padding:8px 10px;font-size:13px;font-family:'Montserrat',sans-serif;outline:none;transition:border-color .15s}
+.form-row input:focus,.form-row select:focus{border-color:#f5a623;box-shadow:0 0 0 2px rgba(245,166,35,.1)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ro{background:#f3f4f6!important;color:#9ca3af!important;cursor:default!important}
+.mf{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.last-info{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 11px;font-size:11px;color:#166534;margin-bottom:11px}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:400;border-radius:8px;padding:10px 15px;font-size:12px;font-weight:600;animation:tin .2s ease;max-width:300px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-family:'Montserrat',sans-serif}
+.ts{background:#16a34a;color:#fff}.te{background:#dc2626;color:#fff}.ti{background:#1a1a2e;color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ANALYSIS MODAL */
+.alert-box{border-radius:8px;padding:11px 14px;margin-bottom:9px;font-size:12px;line-height:1.6;display:flex;gap:10px;align-items:flex-start}
+.a-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.a-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.a-yellow{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.a-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.ai{font-size:16px;flex-shrink:0;margin-top:1px}
+.at strong{display:block;font-weight:700;margin-bottom:1px}
+.stitle{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin:16px 0 9px}
+.rec-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:11px 13px;margin-bottom:7px;font-size:12px;color:#374151;line-height:1.6;display:flex;gap:9px}
+.trend-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.trend-row:last-child{border-bottom:none}
+.pill{display:inline-block;padding:2px 8px;border-radius:11px;font-size:10px;font-weight:700}
+.pup{background:#fee2e2;color:#dc2626}.pdown{background:#dcfce7;color:#16a34a}.peq{background:#f3f4f6;color:#6b7280}
+.loading{text-align:center;padding:36px;color:#6b7280;font-size:12px}
+.spinner{width:26px;height:26px;border:3px solid #e5e7eb;border-top-color:#7c3aed;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;padding:10px 12px}
+.stat-lbl{font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.stat-val{font-size:16px;font-weight:800}
+
+/* COMPTEURS MANAGER */
+.comp-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;margin-bottom:14px}
+.comp-item{display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:9px 12px;gap:8px}
+.comp-item.is-general{background:#fef3c7;border-color:#fde68a}
+.comp-name{font-size:13px;font-weight:600;color:#1a1a2e;flex:1}
+.comp-name small{display:block;font-size:10px;color:#9ca3af;font-weight:400;margin-top:1px}
+.comp-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;background:#fde68a;color:#92400e;white-space:nowrap}
+.comp-del{background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;padding:3px 7px;border-radius:5px;transition:all .15s;flex-shrink:0}
+.comp-del:hover{background:#fee2e2;color:#dc2626}
+.comp-del:disabled{opacity:.2;cursor:not-allowed}
+.add-comp-row{display:flex;gap:8px;align-items:center}
+.add-comp-row input{flex:1}
+.comp-stats{font-size:10px;color:#9ca3af;margin-top:2px}
+.comp-used{background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
+.comp-unused{background:#f3f4f6;color:#6b7280;border-radius:4px;padding:1px 6px;font-size:10px}
+
+/* MISC */
+.empty{text-align:center;padding:28px;color:#9ca3af;font-size:12px}
+
+/* ── IMPRESSION / EXPORT PDF ─────────────────────────────────────────────── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  header, .import-zone, .unsaved-banner, .filter-bar, .kpi-grid,
+  .analysis-grid, .table-card, .overlay, .hactions { display: none !important; }
+  body { background: #fff !important; margin: 0; padding: 0; }
+  main { padding: 0 !important; }
+  .charts-col { gap: 0 !important; }
+  .chart-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 14px !important;
+    box-shadow: none !important;
+  }
+  .chart-wrap { height: 200px !important; }
+  .chart-wrap.tall { height: 240px !important; }
+  .chart-wrap.sm { height: 180px !important; }
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 8px !important; }
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0 14px 0;
+    border-bottom: 2px solid #1a1a2e;
+    margin-bottom: 14px;
+  }
+  .print-header h2 { font-size: 16px; font-weight: 800; color: #1a1a2e; font-family: Montserrat, sans-serif; }
+  .print-header span { font-size: 11px; color: #6b7280; font-family: Montserrat, sans-serif; }
+}
+@media screen {
+  .print-header { display: none; }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="ody-back-bar" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#1B2430;border-bottom:1px solid #2E3B4C;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-family:'Montserrat',sans-serif;font-size:12px;">
+  <a href="../index.html" style="color:#8B96A5;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;">
+    <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Portail Odyssée
+  </a>
+  <button onclick="odyLogout(); window.location.href='../login.html';" style="background:transparent;border:1px solid #2E3B4C;color:#8B96A5;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;padding:5px 10px;border-radius:5px;cursor:pointer;">Déconnexion</button>
+</div>
+<div style="height:38px"></div>
+
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <h1>Suivi des Compteurs Électriques</h1>
+      <span id="hDate"></span>
+    </div>
+  </div>
+  <div class="hactions">
+    <button class="btn btn-green btn-sm" id="btnSave" onclick="saveLocal(true)" style="display:none">💾 Enregistrer</button>
+    <div class="undo-group">
+      <button id="btnUndo" onclick="undo()" disabled title="Annuler (Ctrl+Z)">↩ Annuler</button>
+      <button id="btnRedo" onclick="redo()" disabled title="Rétablir (Ctrl+Y)">Rétablir ↪</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="openCompManager()">⚙️ Compteurs</button>
+    <button class="btn btn-accent btn-sm" onclick="exportGraphsPDF()" title="Extraire tous les graphes en PDF">📄 Exporter Graphes PDF</button>
+    <button class="btn btn-green btn-sm" onclick="exportShareable()" title="Exporter un fichier HTML avec toutes vos données intégrées, prêt à envoyer par mail">📤 Partager Dashboard</button>
+<button class="btn btn-outline btn-sm" onclick="exportExcel()">📥 Exporter Excel</button>
+    <button class="btn btn-purple btn-sm" onclick="openAnalysis()">🔍 Analyse</button>
+    <button class="btn btn-accent btn-sm" onclick="openAddModal()">+ Ajouter un relevé</button>
+  </div>
+</header>
+
+<!-- IMPORT ZONE -->
+<div class="import-zone" id="importZone">
+  <div class="iz-hero">
+    <div class="icon">📊</div>
+    <h3>Importer votre fichier Excel</h3>
+    <p>Glissez-déposez votre fichier <strong>.xlsx</strong> ou cliquez pour sélectionner.<br>
+    L'import <strong>remplace toutes les données existantes</strong>.<br>
+    Colonnes : Date · Compteur · Compteur Debut · Compteur Fin · Consommation · prix de KWH · Cout Totale</p>
+    <div class="iz-actions">
+      <button class="btn btn-dark" onclick="$('fileInput').click()">📂 Choisir un fichier .xlsx</button>
+      <button class="btn btn-outline" onclick="loadSample()">🧪 Données d'exemple</button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+  <div id="importMsg" style="margin-top:10px;font-size:11px;color:#6b7280"></div>
+</div>
+
+<main id="mainContent" style="display:none">
+
+  <!-- UNSAVED BANNER -->
+  <div class="unsaved-banner hidden" id="unsavedBanner">
+    <span>⚠️ Modifications non enregistrées.</span>
+    <button class="btn btn-green btn-sm" onclick="saveLocal(true)">💾 Enregistrer</button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <span class="flabel">Filtres</span>
+    <div class="fgroup">
+      <span class="flabel">Atelier</span>
+      <select id="fComp" onchange="applyFilters()"><option value="">Tous</option></select>
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Du</span>
+      <input type="date" id="fFrom" onchange="applyFilters()">
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Au</span>
+      <input type="date" id="fTo" onchange="applyFilters()">
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Période</span>
+      <div class="period-toggle">
+        <button class="ptbtn active" id="ptJour" onclick="setPeriod('jour')">Par jour</button>
+        <button class="ptbtn" id="ptMois" onclick="setPeriod('mois')">Par mois</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Mois</span>
+      <select id="fMonth" onchange="applyFilters()">
+        <option value="">Tous les mois</option>
+        <option value="01">Janvier</option>
+        <option value="02">Février</option>
+        <option value="03">Mars</option>
+        <option value="04">Avril</option>
+        <option value="05">Mai</option>
+        <option value="06">Juin</option>
+        <option value="07">Juillet</option>
+        <option value="08">Août</option>
+        <option value="09">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+      </select>
+    </div>
+    <div class="fgroup">
+      <span class="flabel">Année</span>
+      <select id="fYear" onchange="applyFilters()">
+        <option value="">Toutes</option>
+      </select>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="resetFilters()">↺ Reset</button>
+    <span id="fCount" style="font-size:10px;color:#9ca3af"></span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-o"><div class="kpi-lbl">Conso. Ateliers</div><div class="kpi-val" id="kCons">—</div><div class="kpi-sub">kWh (hors général)</div></div>
+    <div class="kpi-card kpi-b"><div class="kpi-lbl">Coût total</div><div class="kpi-val" id="kCout">—</div><div class="kpi-sub">MAD</div></div>
+    <div class="kpi-card kpi-g"><div class="kpi-lbl">Prix moyen/kWh</div><div class="kpi-val" id="kPrix">—</div><div class="kpi-sub">MAD</div></div>
+    <div class="kpi-card kpi-gr"><div class="kpi-lbl">Compteur Général ORCA</div><div class="kpi-val" id="kGen">—</div><div class="kpi-sub">kWh (référence usine)</div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <!-- Header visible uniquement à l'impression -->
+  <div class="print-header" id="printHeader">
+    <div>
+      <h2>⚡ Suivi des Compteurs Électriques — Graphes</h2>
+      <span id="printSubtitle"></span>
+    </div>
+    <span id="printDate"></span>
+  </div>
+
+  <div class="charts-col">
+
+    <!-- GÉNÉRAL ORCA en premier -->
+    <div class="chart-card chart-general">
+      <div style="display:flex;align-items:center;margin-bottom:3px">
+        <span class="badge-gen">GÉNÉRAL</span>
+        <div class="ct">Compteur Général ORCA — Consommation & Coût</div>
+      </div>
+      <div class="cs">Relevés du compteur principal (filtre date uniquement — indépendant du filtre atelier)</div>
+      <div class="chart-wrap"><canvas id="cGen"></canvas></div>
+    </div>
+
+    <!-- Conso ateliers par période -->
+    <div class="chart-card">
+      <div class="ct">Consommation par période (kWh) — Ateliers</div>
+      <div class="cs">Somme des ateliers hors Compteur Général (évite le doublon)</div>
+      <div class="chart-wrap"><canvas id="cCons"></canvas></div>
+    </div>
+
+    <!-- Coût par période -->
+    <div class="chart-card">
+      <div class="ct">Coût total par période (MAD) — Ateliers</div>
+      <div class="cs">Montant total facturé par période</div>
+      <div class="chart-wrap"><canvas id="cCout"></canvas></div>
+    </div>
+
+    <!-- Barres empilées -->
+    <div class="chart-card">
+      <div class="ct">Consommation par atelier & période</div>
+      <div class="cs">Comparaison détaillée — barres empilées</div>
+      <div class="chart-wrap tall"><canvas id="cStack"></canvas></div>
+    </div>
+
+    <!-- Pie + Prix -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="ct">Répartition par atelier (%)</div>
+        <div class="cs">Part de consommation totale</div>
+        <div class="chart-wrap sm"><canvas id="cPie"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="ct">Prix moyen / kWh par période</div>
+        <div class="cs">Évolution du tarif</div>
+        <div class="chart-wrap sm"><canvas id="cPrix"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ANALYSIS CARDS -->
+  <div class="analysis-grid">
+    <div class="a-card"><h4>🏆 Top consommateurs</h4><div id="aTop"></div></div>
+    <div class="a-card"><h4>💰 Répartition des coûts</h4><div id="aCout"></div></div>
+    <div class="a-card"><h4>📅 Résumé par période</h4><div id="aDate"></div></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="th-row">
+      <div><div style="font-size:13px;font-weight:700;color:#1a1a2e">Tous les relevés</div><div style="font-size:11px;color:#9ca3af" id="tSub">—</div></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-red btn-sm" onclick="clearAll()">🗑 Vider</button>
+        <button class="btn btn-accent btn-sm" onclick="openAddModal()">+ Ajouter</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Atelier</th><th>Idx début</th><th>Idx fin</th>
+          <th>Conso (kWh)</th><th>Prix/kWh</th><th>Coût (MAD)</th><th></th>
+        </tr></thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ADD RELEVE MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h3>⚡ Nouveau relevé</h3>
+    <div class="form-row">
+      <label>Date du relevé</label>
+      <input type="date" id="mDate">
+    </div>
+    <div class="form-row">
+      <label>Compteur / Atelier</label>
+      <select id="aComp" onchange="onCompChange()"><option value="">— Sélectionner un compteur —</option></select>
+    </div>
+    <div id="lastInfo" class="last-info" style="display:none">
+      📋 Dernier index connu : <strong id="lastVal">—</strong> kWh (relevé du <span id="lastDate">—</span>)
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Index début (kWh)</label>
+        <input type="text" id="aDeb" placeholder="Auto-rempli" oninput="fmtInput(this);calcAdd()" inputmode="decimal">
+      </div>
+      <div class="form-row">
+        <label>Index fin (kWh)</label>
+        <input type="text" id="aFin" placeholder="ex: 6 968 256" oninput="fmtInput(this);calcAdd()" inputmode="decimal">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Prix / kWh (MAD)</label>
+        <input type="text" id="aPrix" value="1.1" oninput="fmtInputDec(this);calcAdd()" inputmode="decimal">
+      </div>
+      <div class="form-row">
+        <label>Consommation (auto)</label>
+        <input type="text" id="aCons" class="ro" readonly>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Coût total MAD (auto)</label>
+      <input type="text" id="aCoutF" class="ro" readonly>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeAddModal()">Annuler</button>
+      <button class="btn btn-accent" onclick="saveNewReleve()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT RELEVE MODAL -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h3>✏️ Modifier le relevé</h3>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <label>Date du relevé</label>
+      <input type="date" id="eDate">
+    </div>
+    <div class="form-row">
+      <label>Compteur / Atelier</label>
+      <select id="eComp"></select>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Index début (kWh)</label>
+        <input type="text" id="eDeb" oninput="fmtInput(this);calcEdit()" inputmode="decimal">
+      </div>
+      <div class="form-row">
+        <label>Index fin (kWh)</label>
+        <input type="text" id="eFin" oninput="fmtInput(this);calcEdit()" inputmode="decimal">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Prix / kWh (MAD)</label>
+        <input type="text" id="ePrix" oninput="fmtInputDec(this);calcEdit()" inputmode="decimal">
+      </div>
+      <div class="form-row">
+        <label>Consommation (auto)</label>
+        <input type="text" id="eCons" class="ro" readonly>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Coût total MAD (auto)</label>
+      <input type="text" id="eCout" class="ro" readonly>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeEditModal()">Annuler</button>
+      <button class="btn btn-accent" onclick="saveEditReleve()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPTEURS MANAGER MODAL -->
+<div class="overlay" id="compOverlay">
+  <div class="modal" style="width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="margin:0">⚙️ Gestion des compteurs</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeCompManager()">✕</button>
+    </div>
+    <p style="font-size:11px;color:#6b7280;margin-bottom:14px">
+      Ajoutez ou supprimez des compteurs. Un compteur utilisé dans des relevés existants ne peut pas être supprimé.
+    </p>
+    <div class="comp-list" id="compList"></div>
+    <div class="add-comp-row">
+      <input type="text" id="newCompName" placeholder="Nom du nouveau compteur (ex: Compteur SÉCHOIR 2)" onkeydown="if(event.key==='Enter')addCompteur()">
+      <button class="btn btn-accent" onclick="addCompteur()">+ Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYSIS MODAL -->
+<div class="overlay" id="analysisOverlay">
+  <div class="modal modal-wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h3 style="margin:0">🔍 Analyse & Recommandations</h3>
+      <button class="btn btn-outline btn-sm" onclick="$('analysisOverlay').classList.remove('open')">✕ Fermer</button>
+    </div>
+    <div id="analysisContent"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+
+
+// ────────────────────────────────────────────────────────────────────────────
+// CONSTANTS & STATE
+// ────────────────────────────────────────────────────────────────────────────
+const SK = 'elec_final_v1';
+const PAL = ['#f5a623','#3b82f6','#22c55e','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6','#a78bfa','#fb923c'];
+const GENERAL_RE = /g[eé]n[eé]ral|orca/i;
+const isGen = r => GENERAL_RE.test(r.compteur);
+
+// ── COMPTEURS LIST (persistée séparément) ──────────────────────────────────
+const SK_COMP = 'elec_compteurs_v1';
+const DEFAULT_COMPTEURS = [
+  'Compteur général ORCA',
+  'Compteur YNION',
+  'Compteur PPE 1',
+  'Compteur PPE 2',
+  'Compteur COULAGE B',
+  'Compteur COULAGE A2',
+  'Compteur COULAGE A1',
+  'Compteur ÉMAILLAGE ET INSPECTION',
+  'Compteur FOUR TUNNEL',
+  'Compteur DLT/HLT',
+  'Compteur COULAGE HPC',
+  'Compteur SÉCHOIR',
+  'Compteur B extension (Genitec)',
+];
+
+function loadCompteurs() {
+  try { const r = localStorage.getItem(SK_COMP); return r ? JSON.parse(r) : [...DEFAULT_COMPTEURS]; } catch(e) { return [...DEFAULT_COMPTEURS]; }
+}
+function saveCompteurs() {
+  try { localStorage.setItem(SK_COMP, JSON.stringify(compteursList)); } catch(e) {}
+}
+
+let compteursList = loadCompteurs();
+let allData = [], filtered = [], charts = {}, unsaved = false, groupPeriod = 'jour';
+// Historique annuler/rétablir
+let history = [], historyIdx = -1;
+const MAX_HISTORY = 50;
+
+
+// ────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ────────────────────────────────────────────────────────────────────────────
+function fmt(n, d = 0) {
+  return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function fmtDate(v) {
+  if (!v) return '';
+  if (typeof v === 'number' && v > 40000) {
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    const y = d.getUTCFullYear(), m = String(d.getUTCMonth() + 1).padStart(2,'0'), dd = String(d.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  }
+  if (typeof v === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+    const m = v.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    const d = new Date(v); if (!isNaN(d)) return d.toISOString().split('T')[0];
+  }
+  return String(v).slice(0, 10) || '';
+}
+
+function dispDate(s) {
+  if (!s) return '—';
+  const d = new Date(s + 'T12:00:00');
+  return isNaN(d) ? s : d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function tagCls(n) {
+  if (/orca|g[eé]n[eé]ral/i.test(n)) return 'tg';
+  if (/ppe/i.test(n)) return 'tb';
+  if (/coulage/i.test(n)) return 'tc';
+  return 'to';
+}
+
+function yesterday() {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+function toast(msg, t = 'i') {
+  const el = document.createElement('div');
+  el.className = 'toast t' + t; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// PERIOD GROUPING
+// ────────────────────────────────────────────────────────────────────────────
+function periodKey(date) { return groupPeriod === 'mois' ? date.slice(0, 7) : date; }
+
+function periodLabel(key) {
+  if (groupPeriod === 'mois') {
+    const [y, m] = key.split('-');
+    const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    return months[parseInt(m) - 1] + ' ' + y;
+  }
+  return dispDate(key);
+}
+
+function setPeriod(p) {
+  groupPeriod = p;
+  ['ptJour','ptMois'].forEach(id => $(id).classList.remove('active'));
+  $(p === 'jour' ? 'ptJour' : 'ptMois').classList.add('active');
+  render();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// LOCAL STORAGE
+// ────────────────────────────────────────────────────────────────────────────
+function loadLocal() { try { const r = localStorage.getItem(SK); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+
+function saveLocal(notify = false) {
+  try {
+    localStorage.setItem(SK, JSON.stringify(allData));
+    unsaved = false;
+    $('unsavedBanner').classList.add('hidden');
+    $('btnSave').style.display = 'none';
+    if (notify) toast('Données enregistrées !', 's');
+  } catch(e) { toast('Erreur de sauvegarde.', 'e'); }
+}
+
+function markUnsaved() {
+  unsaved = true;
+  $('unsavedBanner').classList.remove('hidden');
+  $('btnSave').style.display = '';
+}
+
+// ── GESTION COMPTEURS ────────────────────────────────────────────────────────
+function fillCompSelects() {
+  // Remplit tous les selects de compteurs dynamiquement
+  ['aComp', 'eComp'].forEach(id => {
+    const sel = $(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = id === 'aComp' ? '<option value="">— Sélectionner un compteur —</option>' : '';
+    compteursList.forEach(name => {
+      const o = document.createElement('option');
+      o.value = name; o.textContent = name;
+      sel.appendChild(o);
+    });
+    if (cur && compteursList.includes(cur)) sel.value = cur;
+  });
+}
+
+function openCompManager() {
+  renderCompList();
+  $('newCompName').value = '';
+  $('compOverlay').classList.add('open');
+}
+function closeCompManager() { $('compOverlay').classList.remove('open'); }
+$('compOverlay').addEventListener('click', e => { if (e.target === $('compOverlay')) closeCompManager(); });
+
+function renderCompList() {
+  const usedNames = new Set(allData.map(r => r.compteur));
+  $('compList').innerHTML = compteursList.map((name, i) => {
+    const isGeneral = /g[eé]n[eé]ral|orca/i.test(name);
+    const used = usedNames.has(name);
+    const usedCount = allData.filter(r => r.compteur === name).length;
+    const canDelete = !isGeneral && !used;
+    return `<div class="comp-item${isGeneral ? ' is-general' : ''}">
+      <div style="flex:1;min-width:0">
+        <div class="comp-name">${name}</div>
+        <div class="comp-stats">
+          ${used ? `<span class="comp-used">✓ ${usedCount} relevé(s)</span>` : '<span class="comp-unused">Aucun relevé</span>'}
+          ${isGeneral ? '<span class="comp-badge" style="margin-left:5px">GÉNÉRAL</span>' : ''}
+        </div>
+      </div>
+      <button class="comp-del" onclick="deleteCompteur(${i})" ${canDelete ? '' : 'disabled'} title="${isGeneral ? 'Le compteur général ne peut pas être supprimé' : used ? 'Compteur utilisé dans des relevés' : 'Supprimer'}">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addCompteur() {
+  const input = $('newCompName');
+  const name = input.value.trim();
+  if (!name) { toast('Entrez un nom de compteur.', 'e'); return; }
+  if (compteursList.includes(name)) { toast('Ce compteur existe déjà.', 'e'); return; }
+  compteursList.push(name);
+  saveCompteurs();
+  fillCompSelects();
+  populateFilters();
+  renderCompList();
+  input.value = '';
+  toast(`"${name}" ajouté !`, 's');
+}
+
+function deleteCompteur(idx) {
+  const name = compteursList[idx];
+  const used = allData.some(r => r.compteur === name);
+  if (used) { toast('Ce compteur a des relevés — impossible de le supprimer.', 'e'); return; }
+  if (/g[eé]n[eé]ral|orca/i.test(name)) { toast('Le compteur général ne peut pas être supprimé.', 'e'); return; }
+  if (!confirm(`Supprimer "${name}" ?`)) return;
+  compteursList.splice(idx, 1);
+  saveCompteurs();
+  fillCompSelects();
+  populateFilters();
+  renderCompList();
+  toast(`"${name}" supprimé.`, 'i');
+}
+
+// ── HISTORY (Annuler / Rétablir) ────────────────────────────────────────────
+function pushHistory() {
+  // Tronquer l'historique au curseur courant (efface les "redo" futurs)
+  history = history.slice(0, historyIdx + 1);
+  history.push(JSON.stringify(allData));
+  if (history.length > MAX_HISTORY) history.shift();
+  historyIdx = history.length - 1;
+  updateUndoRedo();
+}
+
+function updateUndoRedo() {
+  const u = $('btnUndo'), r = $('btnRedo');
+  if (u) u.disabled = historyIdx <= 0;
+  if (r) r.disabled = historyIdx >= history.length - 1;
+}
+
+function undo() {
+  if (historyIdx <= 0) return;
+  historyIdx--;
+  allData = JSON.parse(history[historyIdx]);
+  filtered = [...allData];
+  saveLocal();
+  populateFilters();
+  applyFilters();
+  updateUndoRedo();
+  toast('↩ Annulé', 'i');
+}
+
+function redo() {
+  if (historyIdx >= history.length - 1) return;
+  historyIdx++;
+  allData = JSON.parse(history[historyIdx]);
+  filtered = [...allData];
+  saveLocal();
+  populateFilters();
+  applyFilters();
+  updateUndoRedo();
+  toast('↪ Rétabli', 'i');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// SHOW DASHBOARD
+// ────────────────────────────────────────────────────────────────────────────
+function populateYears() {
+  const sel = $('fYear');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Toutes</option>';
+  const years = [...new Set(allData.map(r => r.date ? r.date.slice(0,4) : '').filter(Boolean))].sort().reverse();
+  years.forEach(y => {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+function showDash() {
+  $('mainContent').style.display = 'block';
+  const iz = $('importZone');
+  iz.classList.add('compact');
+  iz.innerHTML = `
+    <div class="import-info"><strong>✅ ${allData.length} relevé(s) chargés</strong> — <span id="importMsg2"></span></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="file" id="fileInput2" accept=".xlsx,.xls" onchange="handleFile(event)" style="display:none">
+      <button class="btn btn-outline btn-sm" onclick="$('fileInput2').click()">📂 Remplacer le fichier</button>
+    </div>`;
+}
+
+function setMsg(txt) { const el = $('importMsg2'); if (el) el.textContent = txt; }
+
+// ────────────────────────────────────────────────────────────────────────────
+// IMPORT EXCEL
+// ────────────────────────────────────────────────────────────────────────────
+const iz = $('importZone');
+iz.addEventListener('dragover', e => { e.preventDefault(); iz.classList.add('drag-over'); });
+iz.addEventListener('dragleave', () => iz.classList.remove('drag-over'));
+iz.addEventListener('drop', e => { e.preventDefault(); iz.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) parseExcel(f); });
+
+function handleFile(e) { const f = e.target.files[0]; if (f) parseExcel(f); e.target.value = ''; }
+
+function parseExcel(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
+      const shName = wb.SheetNames.find(n => /base|donn/i.test(n)) || wb.SheetNames[0];
+      const ws = wb.Sheets[shName];
+      const rows = XLSX.utils.sheet_to_json(ws, { raw: true, defval: null });
+      const newData = []; let idBase = Date.now();
+
+      rows.forEach((row, i) => {
+        const keys = Object.keys(row);
+        const get = patterns => { const k = keys.find(k => patterns.some(p => k.toLowerCase().replace(/[\s_]/g,'').includes(p))); return k ? (row[k] ?? '') : ''; };
+
+        const compteur = String(get(['compteur','counter']) || '').trim();
+        if (!compteur) return;
+
+        const dateRaw = get(['date']);
+        const dateStr = fmtDate(dateRaw);
+
+        const finRaw = get(['fin','end','final']);
+        if (finRaw === null || finRaw === '' || finRaw === undefined) return; // skip NaN rows
+
+        const debut = parseFloat(get(['debut','début','start','initial'])) || 0;
+        const fin = parseFloat(finRaw) || 0;
+        const prix = parseFloat(get(['prix','price','kwh'])) || 1.1;
+
+        let conso = parseFloat(get(['conso','consommation','consumption'])) || 0;
+        if (!conso && fin > debut) conso = Math.round((fin - debut) * 100) / 100;
+        if (conso <= 0) return;
+
+        let cout = parseFloat(get(['cout','coût','cost','total'])) || 0;
+        if (!cout && conso && prix) cout = Math.round(conso * prix * 100) / 100;
+
+        newData.push({ id: idBase + i, date: dateStr, compteur, debut, fin, conso, prix, cout });
+      });
+
+      if (!newData.length) { toast('Aucune ligne valide trouvée.', 'e'); return; }
+
+      allData = [...newData];
+      filtered = [...allData];
+      // Réinitialiser l'historique sur un nouvel import
+      history = [JSON.stringify(allData)]; historyIdx = 0;
+      updateUndoRedo();
+      saveLocal(); // auto-save on import
+      // Ajouter automatiquement les compteurs inconnus du fichier importé
+      const importedNames = [...new Set(newData.map(r => r.compteur))];
+      importedNames.forEach(n => { if (n && !compteursList.includes(n)) { compteursList.push(n); } });
+      saveCompteurs();
+      fillCompSelects();
+      showDash();
+      populateFilters();
+      applyFilters();
+      const skipped = rows.length - newData.length;
+      setMsg(`"${file.name}" — ${newData.length} relevés${skipped > 0 ? ` (${skipped} lignes ignorées)` : ''}`);
+      toast(`${newData.length} relevés importés !`, 's');
+    } catch(err) { console.error(err); toast('Erreur : ' + err.message, 'e'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// SAMPLE DATA
+// ────────────────────────────────────────────────────────────────────────────
+function loadSample() {
+  allData = [
+    {id:1,date:'2026-01-15',compteur:'Compteur général ORCA',debut:6800000,fin:6804200,conso:4200,prix:1.1,cout:4620},
+    {id:2,date:'2026-01-15',compteur:'Compteur YNION',debut:6100000,fin:6102796,conso:2796,prix:1.1,cout:3076},
+    {id:3,date:'2026-01-15',compteur:'Compteur PPE 1',debut:900,fin:1229,conso:329,prix:1.1,cout:362},
+    {id:4,date:'2026-01-15',compteur:'Compteur COULAGE A1',debut:5210000,fin:5210785,conso:785,prix:1.1,cout:864},
+    {id:5,date:'2026-02-12',compteur:'Compteur général ORCA',debut:6804200,fin:6808900,conso:4700,prix:1.1,cout:5170},
+    {id:6,date:'2026-02-12',compteur:'Compteur YNION',debut:6102796,fin:6106190,conso:3394,prix:1.1,cout:3733},
+    {id:7,date:'2026-02-12',compteur:'Compteur PPE 1',debut:1229,fin:1959,conso:730,prix:1.1,cout:803},
+    {id:8,date:'2026-02-12',compteur:'Compteur COULAGE A1',debut:5210785,fin:5212359,conso:1574,prix:1.1,cout:1731},
+    {id:9,date:'2026-06-10',compteur:'Compteur général ORCA',debut:6953189,fin:6960793,conso:7604,prix:1.1,cout:8364},
+    {id:10,date:'2026-06-10',compteur:'Compteur YNION',debut:6139621,fin:6142417,conso:2796,prix:1.1,cout:3076},
+    {id:11,date:'2026-06-10',compteur:'Compteur PPE 1',debut:1363,fin:1692,conso:329,prix:1.1,cout:362},
+    {id:12,date:'2026-06-10',compteur:'Compteur COULAGE A1',debut:5218152,fin:5218937,conso:785,prix:1.1,cout:864},
+    {id:13,date:'2026-06-11',compteur:'Compteur général ORCA',debut:6960793,fin:6968256,conso:7463,prix:1.1,cout:8209},
+    {id:14,date:'2026-06-11',compteur:'Compteur YNION',debut:6142417,fin:6147811,conso:5394,prix:1.1,cout:5933},
+    {id:15,date:'2026-06-11',compteur:'Compteur PPE 1',debut:1692,fin:2422,conso:730,prix:1.1,cout:803},
+    {id:16,date:'2026-06-11',compteur:'Compteur COULAGE A1',debut:5218937,fin:5220511,conso:1574,prix:1.1,cout:1731},
+    {id:17,date:'2026-06-12',compteur:'Compteur général ORCA',debut:6968256,fin:6975558,conso:7302,prix:1.1,cout:8032},
+    {id:18,date:'2026-06-12',compteur:'Compteur PPE 1',debut:2422,fin:2664,conso:242,prix:1.1,cout:266},
+    {id:19,date:'2026-06-12',compteur:'Compteur COULAGE A1',debut:5220511,fin:5221427,conso:916,prix:1.1,cout:1008},
+  ];
+  filtered = [...allData];
+  saveLocal();
+  showDash(); populateFilters(); applyFilters();
+  setMsg('Données d\'exemple');
+  toast('Données d\'exemple chargées !', 's');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// EXPORT
+// ────────────────────────────────────────────────────────────────────────────
+// ── EXPORT PARTAGEABLE (HTML autonome avec données intégrées) ────────────
+function exportShareable() {
+  if (!allData.length) { toast('Aucune donnée à partager.', 'e'); return; }
+
+  const dateStr  = new Date().toLocaleDateString('fr-FR');
+  const _now = new Date();
+  const _date = _now.toISOString().slice(0,10);
+  const _hh = String(_now.getHours()).padStart(2,'0');
+  const _mm = String(_now.getMinutes()).padStart(2,'0');
+  const fileName = 'Dashboard_Electricite_' + _date + '_' + _hh + 'h' + _mm + '.html';
+  const nReleves = allData.length;
+
+  // ── Sérialiser les données en JSON ──────────────────────────────────────
+  const dataJson = JSON.stringify(allData);
+  const compJson = JSON.stringify(compteursList);
+
+  // ── Script d'injection : données en dur comme variables globales ─────────
+  // On utilise window.__D__ pour éviter tout conflit, sans backticks imbriqués
+  const injectTag =
+    '<script id="_edata_">' +
+    'window.__D__=' + dataJson + ';' +
+    'window.__C__=' + compJson + ';' +
+    '<\/script>';
+
+  // ── Nouveau bloc INIT qui lit window.__D__ en priorité sur localStorage ──
+  const oldInit =
+    'const saved = loadLocal();\n' +
+    'if (saved && saved.length) {\n' +
+    '  allData = saved; filtered = [...allData];\n' +
+    '  history = [JSON.stringify(allData)]; historyIdx = 0;\n' +
+    '  updateUndoRedo();\n' +
+    '  showDash(); populateFilters(); applyFilters();\n' +
+    '  setMsg(`${saved.length} relevé(s) depuis la mémoire locale`);\n' +
+    '}';
+
+  const newInit =
+    'if (window.__D__ && window.__D__.length) {\n' +
+    '  if (window.__C__) { compteursList = window.__C__; fillCompSelects(); }\n' +
+    '  allData = window.__D__; filtered = [...allData];\n' +
+    '  history = [JSON.stringify(allData)]; historyIdx = 0;\n' +
+    '  updateUndoRedo();\n' +
+    '  showDash(); populateFilters(); applyFilters();\n' +
+    '  setMsg("' + nReleves + ' relevés intégrés — données au ' + dateStr + '");\n' +
+    '} else {\n' +
+    '  const saved = loadLocal();\n' +
+    '  if (saved && saved.length) {\n' +
+    '    allData = saved; filtered = [...allData];\n' +
+    '    history = [JSON.stringify(allData)]; historyIdx = 0;\n' +
+    '    updateUndoRedo();\n' +
+    '    showDash(); populateFilters(); applyFilters();\n' +
+    '    setMsg(saved.length + " relevé(s) depuis la mémoire locale");\n' +
+    '  }\n' +
+    '}';
+
+  // ── Construire le HTML partagé ────────────────────────────────────────────
+  let html = document.documentElement.outerHTML;
+
+  // 1. Injecter le tag de données avant </head>
+  html = html.replace('</head>', injectTag + '</head>');
+
+  // 2. Remplacer le bloc INIT
+  if (html.includes(oldInit)) {
+    html = html.replace(oldInit, newInit);
+  }
+
+  // 3. Bannière info
+  const banner =
+    '<div style="background:#1a1a2e;color:#fff;font-family:Montserrat,sans-serif;' +
+    'padding:9px 20px;font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:10px">' +
+    '<span>&#9889; <strong>Dashboard Suivi Électrique</strong> — ' + nReleves + ' relevés — données au ' + dateStr + '</span>' +
+    '<span style="color:#9ca3af">Ouvrez dans Chrome, Edge ou Firefox</span>' +
+    '</div>';
+  html = html.replace('<header', banner + '<header');
+
+  // ── Télécharger ───────────────────────────────────────────────────────────
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+
+  // 2. Ouvrir Outlook nouvelle version (Outlook Web / Microsoft 365)
+  const lastDate = allData.length
+    ? [...allData].sort((a,b) => b.date.localeCompare(a.date))[0].date
+    : new Date().toISOString().slice(0,10);
+  const lastDateFr = dispDate(lastDate);
+
+  const outlookSubject = encodeURIComponent('Dashboard Suivi de Consommation Électrique — ' + dateStr);
+  const outlookBody    = encodeURIComponent(
+    'Bonjour,\n\n' +
+    'Veuillez trouver ci-joint le dashboard de suivi de consommation d\'électricité jusqu\'à la date du ' + lastDateFr + '.\n\n' +
+    'Cordialement'
+  );
+  const toAddr = 's.kaddari@odyssee.co.ma;developpement@odyssee.co.ma';
+
+  // Ouvrir le client mail par défaut (mailto standard)
+  const mailtoUrl = 'mailto:' + encodeURIComponent(toAddr) +
+    '?subject=' + outlookSubject +
+    '&body=' + outlookBody;
+
+  setTimeout(function() {
+    window.location.href = mailtoUrl;
+  }, 800);
+
+  // Afficher une modale de guidage
+  showMailGuide(fileName);
+}
+
+function showMailGuide(fileName) {
+  // Supprimer modale existante si présente
+  const existing = $('mailGuide');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'mailGuide';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:28px;width:460px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);font-family:Montserrat,sans-serif">
+      <div style="font-size:32px;margin-bottom:12px;text-align:center">📧</div>
+      <h3 style="font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:8px;text-align:center">Envoi par mail Outlook</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:16px;text-align:center">Outlook s'ouvre avec le mail pré-rédigé. Suivez les 2 étapes :</p>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+          <span style="background:#1a1a2e;color:#f5a623;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">1</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:2px">Joindre le fichier téléchargé</div>
+            <div style="font-size:11px;color:#6b7280">Dans Outlook, cliquez <strong>Joindre un fichier</strong> et sélectionnez :</div>
+            <div style="font-size:11px;background:#fff;border:1px solid #e5e7eb;border-radius:5px;padding:5px 8px;margin-top:5px;font-weight:600;color:#1a1a2e;word-break:break-all">${fileName}</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:3px">📂 Dans votre dossier Téléchargements</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="background:#1a1a2e;color:#f5a623;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">2</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:2px">Ajouter le destinataire et envoyer</div>
+            <div style="font-size:11px;color:#6b7280">L'objet et le corps du mail sont déjà pré-remplis.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button onclick="document.getElementById('mailGuide').remove()" style="background:#1a1a2e;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:12px;font-weight:700;cursor:pointer;font-family:Montserrat,sans-serif">Compris ✓</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+// ── EXPORT GRAPHES PDF ───────────────────────────────────────────────────
+function exportGraphsPDF() {
+  // Mettre à jour le sous-titre avec les filtres actifs
+  const comp = $('fComp').value, from = $('fFrom').value, to = $('fTo').value;
+  const parts = [];
+  if (comp) parts.push(comp.replace('Compteur ', ''));
+  if (from) parts.push('Du ' + dispDate(from));
+  if (to)   parts.push('Au ' + dispDate(to));
+  const filterTxt = parts.length ? parts.join(' · ') : 'Tous les ateliers · Toute période';
+  const periodTxt = groupPeriod === 'mois' ? 'Par mois' : 'Par jour';
+
+  $('printSubtitle').textContent = filterTxt + ' — ' + periodTxt;
+  $('printDate').textContent = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // Forcer le redraw des graphes pour que les valeurs soient visibles
+  Object.values(charts).forEach(ch => { try { ch.update('none'); } catch(e){} });
+
+  setTimeout(() => window.print(), 200);
+}
+
+function exportExcel() {
+  if (!allData.length) { toast('Aucune donnée.', 'e'); return; }
+  const rows = allData.map(r => ({ 'Date': r.date, 'Compteur': r.compteur, 'Compteur Debut ': r.debut, 'Compteur Fin': r.fin, 'Consommation': r.conso, 'prix  de KWH': r.prix, 'Cout Totale': r.cout }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, 'Base de donnees ', ws);
+  XLSX.writeFile(wb, `Suivi_Compteurs_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('Exporté !', 's');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// FILTERS
+// ────────────────────────────────────────────────────────────────────────────
+function populateFilters() {
+  const sel = $('fComp'), cur = sel.value;
+  sel.innerHTML = '<option value="">Tous les ateliers</option>';
+  const names = new Set(allData.filter(r => !isGen(r)).map(r => r.compteur));
+  names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n.replace('Compteur ',''); sel.appendChild(o); });
+  if (cur) sel.value = cur;
+  populateYears();
+}
+
+function applyFilters() {
+  const c = $('fComp').value, from = $('fFrom').value, to = $('fTo').value;
+  const month = $('fMonth').value, year = $('fYear').value;
+  filtered = allData.filter(r => {
+    if (c && r.compteur !== c) return false;
+    if (from && r.date < from) return false;
+    if (to && r.date > to) return false;
+    if (month && r.date && r.date.slice(5,7) !== month) return false;
+    if (year  && r.date && r.date.slice(0,4) !== year)  return false;
+    return true;
+  });
+  render();
+}
+
+function resetFilters() {
+  $('fComp').value = ''; $('fFrom').value = ''; $('fTo').value = '';
+  $('fMonth').value = ''; $('fYear').value = '';
+  filtered = [...allData]; groupPeriod = 'jour';
+  ['ptJour','ptMois'].forEach(id => $(id).classList.remove('active'));
+  $('ptJour').classList.add('active');
+  render();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// KPIs
+// ────────────────────────────────────────────────────────────────────────────
+function updateKPIs() {
+  const ateliers = filtered.filter(r => !isGen(r));
+  const generale = filtered.filter(r => isGen(r));
+  const tc = ateliers.reduce((s, r) => s + (r.conso || 0), 0);
+  const tco = ateliers.reduce((s, r) => s + (r.cout || 0), 0);
+  const ap = tc > 0 ? tco / tc : 0;
+  const tcGen = generale.reduce((s, r) => s + (r.conso || 0), 0);
+  $('kCons').textContent = fmt(tc);
+  $('kCout').textContent = fmt(tco, 2);
+  $('kPrix').textContent = ap.toFixed(3);
+  $('kGen').textContent = fmt(tcGen);
+  $('fCount').textContent = `${filtered.length} relevé(s)`;
+  $('tSub').textContent = `${filtered.length} relevé(s) affiché(s)`;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CHARTS
+// ────────────────────────────────────────────────────────────────────────────
+const CD = {
+  responsive: true, maintainAspectRatio: false,
+  layout: { padding: { top: 22, right: 20, bottom: 4, left: 4 } },
+  plugins: {
+    legend: { labels: { color: '#374151', font: { size: 11, family: 'Montserrat' }, padding: 10, boxWidth: 11 } },
+    tooltip: { backgroundColor: '#fff', borderColor: '#e5e7eb', borderWidth: 1, titleColor: '#1a1a2e', bodyColor: '#6b7280', padding: 9,
+      titleFont: { family: 'Montserrat' }, bodyFont: { family: 'Montserrat' } }
+  },
+  scales: {
+    x: { ticks: { color: '#9ca3af', font: { size: 10, family: 'Montserrat' }, maxRotation: 40 }, grid: { color: '#f3f4f6' } },
+    y: { ticks: { color: '#9ca3af', font: { size: 10, family: 'Montserrat' } }, grid: { color: '#f3f4f6' }, beginAtZero: true }
+  }
+};
+
+function cloneOpts(extra = {}) { return Object.assign(JSON.parse(JSON.stringify(CD)), extra); }
+
+
+function destroyAll() { Object.values(charts).forEach(c => { try { c.destroy(); } catch(e) {} }); charts = {}; }
+
+function groupByPeriod(data) {
+  const by = {};
+  data.forEach(r => {
+    const k = periodKey(r.date);
+    if (!by[k]) by[k] = { conso: 0, cout: 0, prix: [], n: 0 };
+    by[k].conso += Math.round((r.conso || 0) * 100) / 100;
+    by[k].cout  += Math.round((r.cout  || 0) * 100) / 100;
+    by[k].prix.push(r.prix || 0);
+    by[k].n++;
+  });
+  return by;
+}
+
+// ── drawLabels: dessine les valeurs AU-DESSUS des barres/points ──────────
+function drawLabels(chart, formatter, color, datasetIdx) {
+  const { ctx, chartArea, data } = chart;
+  if (!chartArea) return;
+  const PADX = 24, PADY = 4;
+  const L = chartArea.left  + PADX;
+  const R = chartArea.right - PADX;
+  const T = chartArea.top   + PADY;
+  const B = chartArea.bottom - PADY;
+
+  ctx.save();
+  ctx.font = 'bold 11px Montserrat, sans-serif';
+
+  data.datasets.forEach((dataset, di) => {
+    if (datasetIdx !== undefined && di !== datasetIdx) return;
+    const meta = chart.getDatasetMeta(di);
+    if (meta.hidden) return;
+
+    meta.data.forEach((el, i) => {
+      const v = dataset.data[i];
+      if (v === null || v === undefined || v === 0) return;
+      const lbl = formatter ? formatter(v) : String(v);
+      const tw = ctx.measureText(lbl).width;
+      const th = 13;
+
+      // X : centré sur la barre, clampé pour ne pas déborder
+      let x = Math.min(Math.max(el.x, L + tw / 2), R - tw / 2);
+
+      // Pour les barres : el.y = sommet de la barre → placer au-dessus
+      // Pour les lignes : el.y = position du point → placer au-dessus
+      let y = el.y - 8;
+      let baseline = 'bottom';
+
+      // Si pas assez d'espace au-dessus → mettre juste en dessous du sommet (à l'intérieur en haut)
+      if (y - th < T) {
+        y = el.y + 8;
+        baseline = 'top';
+      }
+
+      // Fond blanc semi-transparent pour lisibilité maximale
+      const padding = 3;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(x - tw / 2 - padding, (baseline === 'bottom' ? y - th : y) - 1, tw + padding * 2, th + 2);
+
+      // Texte coloré par-dessus le fond blanc
+      ctx.fillStyle = color || '#374151';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = baseline;
+      ctx.fillText(lbl, x, y);
+    });
+  });
+  ctx.restore();
+}
+
+function updateCharts() {
+  destroyAll();
+
+  // ── Ateliers (hors général)
+  const dataAt = filtered.filter(r => !isGen(r));
+  const byAt = groupByPeriod(dataAt);
+  const dates = Object.keys(byAt).sort();
+  const labels = dates.map(d => periodLabel(d));
+
+  const noLegend = cloneOpts(); noLegend.plugins.legend.display = false;
+
+  // Chart 1 — Conso ateliers
+  charts.cons = new Chart($('cCons'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Conso (kWh)', data: dates.map(d => byAt[d].conso), backgroundColor: 'rgba(245,166,35,.75)', borderColor: '#f5a623', borderWidth: 1.5, borderRadius: 4 }] },
+    options: (() => { const o = cloneOpts(); o.plugins.legend.display = false;
+      o.animation = { onComplete: function() { drawLabels(this, v => fmt(v,0), '#374151'); } }; return o; })()
+  });
+
+  // Chart 2 — Coût ateliers
+  charts.cout = new Chart($('cCout'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Coût (MAD)', data: dates.map(d => byAt[d].cout), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.07)', borderWidth: 2.5, pointBackgroundColor: '#3b82f6', pointRadius: 5, tension: .35, fill: true }] },
+    options: (() => { const o = cloneOpts(); o.plugins.legend.display = false;
+      o.animation = { onComplete: function() { drawLabels(this, v => fmt(v,0)+' MAD', '#2563eb'); } }; return o; })()
+  });
+
+  // Chart 3 — Stacked
+  const atelierNames = [...new Set(dataAt.map(r => r.compteur))];
+  const stackOpts = cloneOpts(); stackOpts.scales.x.stacked = true; stackOpts.scales.y.stacked = true;
+  charts.stack = new Chart($('cStack'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: atelierNames.map((a, i) => ({
+        label: a.replace('Compteur ',''),
+        data: dates.map(d => {
+          const rows = dataAt.filter(r => r.compteur === a && periodKey(r.date) === d);
+          return Math.round(rows.reduce((s, r) => s + (r.conso || 0), 0) * 100) / 100 || 0;
+        }),
+        backgroundColor: PAL[i % PAL.length] + 'cc', borderColor: PAL[i % PAL.length], borderWidth: 1, borderRadius: 2
+      }))
+    },
+    options: { ...stackOpts, plugins: { ...stackOpts.plugins, legend: { position: 'bottom', labels: { color: '#374151', font: { size: 10 }, padding: 7, boxWidth: 10 } } } }
+  });
+
+  // Chart 4 — Pie
+  const pieBy = {};
+  dataAt.forEach(r => { const k = r.compteur.replace('Compteur ',''); pieBy[k] = (pieBy[k] || 0) + (r.conso || 0); });
+  const totalPie = Object.values(pieBy).reduce((a,b)=>a+b,0);
+  charts.pie = new Chart($('cPie'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(pieBy), datasets: [{ data: Object.values(pieBy), backgroundColor: PAL, borderColor: '#fff', borderWidth: 3, hoverOffset: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '55%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#374151', font: { size: 10 }, padding: 7, boxWidth: 10,
+          generateLabels: chart => chart.data.labels.map((l,i) => ({
+            text: l + ' — ' + (totalPie>0?(chart.data.datasets[0].data[i]/totalPie*100).toFixed(1):'0') + '%',
+            fillStyle: PAL[i%PAL.length], strokeStyle: '#fff', lineWidth: 2, hidden: false, index: i
+          }))
+        }},
+        tooltip: { backgroundColor: '#fff', borderColor: '#e5e7eb', borderWidth: 1, titleColor: '#1a1a2e', bodyColor: '#6b7280',
+          callbacks: { label: ctx => ' ' + fmt(ctx.parsed,0) + ' kWh (' + (totalPie>0?(ctx.parsed/totalPie*100).toFixed(1):'0') + '%)' }
+        }
+      }
+    }
+  });
+
+  // Chart 5 — Prix par période
+  charts.prix = new Chart($('cPrix'), {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Prix moy (MAD/kWh)', data: dates.map(d => { const ps = byAt[d].prix; return ps.length ? ps.reduce((a,b) => a+b, 0) / ps.length : 0; }), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.07)', borderWidth: 2, pointBackgroundColor: '#22c55e', pointRadius: 5, tension: .3, fill: true }] },
+    options: (() => { const o = cloneOpts(); o.plugins.legend.display = false;
+      o.animation = { onComplete: function() { drawLabels(this, v => v.toFixed(3), '#16a34a'); } }; return o; })()
+  });
+
+  // Chart 6 — Général ORCA (filtre date + mois + année)
+  const from = $('fFrom').value, to = $('fTo').value;
+  const genMonth = $('fMonth').value, genYear = $('fYear').value;
+  const dataGen = allData.filter(r => {
+    if (!isGen(r)) return false;
+    if (from && r.date < from) return false;
+    if (to && r.date > to) return false;
+    if (genMonth && r.date && r.date.slice(5,7) !== genMonth) return false;
+    if (genYear  && r.date && r.date.slice(0,4) !== genYear)  return false;
+    return true;
+  });
+  const byGen = groupByPeriod(dataGen);
+  const datesGen = Object.keys(byGen).sort();
+  const labelsGen = datesGen.map(d => periodLabel(d));
+
+  const genOpts = cloneOpts();
+  genOpts.scales.y = { ...genOpts.scales.y, position: 'left', ticks: { color: '#1a1a2e', font: { size: 10, family: 'Montserrat' } } };
+  genOpts.scales.y2 = { ticks: { color: '#f5a623', font: { size: 10, family: 'Montserrat' } }, grid: { display: false }, position: 'right', beginAtZero: true };
+
+  charts.gen = new Chart($('cGen'), {
+    type: 'bar',
+    data: {
+      labels: labelsGen,
+      datasets: [
+        { label: 'Conso (kWh)', data: datesGen.map(d => byGen[d].conso), backgroundColor: 'rgba(26,26,46,.75)', borderColor: '#1a1a2e', borderWidth: 1.5, borderRadius: 4, yAxisID: 'y' },
+        { label: 'Coût (MAD)', data: datesGen.map(d => byGen[d].cout), type: 'line', borderColor: '#f5a623', backgroundColor: 'rgba(245,166,35,.07)', borderWidth: 2.5, pointBackgroundColor: '#f5a623', pointRadius: 4, tension: .35, fill: true, yAxisID: 'y2' }
+      ]
+    },
+    options: (() => { const o = { ...genOpts, plugins: { ...genOpts.plugins, legend: { labels: { color: '#374151', font: { size: 11 }, padding: 10, boxWidth: 11 } } } };
+      o.animation = { onComplete: function() { drawLabels(this, v => fmt(v,0), '#374151', 0); } }; return o; })()
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ANALYSIS CARDS
+// ────────────────────────────────────────────────────────────────────────────
+function updateAnalysis() {
+  const dataAt = filtered.filter(r => !isGen(r));
+  const byC = {};
+  dataAt.forEach(r => { if (!byC[r.compteur]) byC[r.compteur] = { conso: 0, cout: 0 }; byC[r.compteur].conso += r.conso || 0; byC[r.compteur].cout += r.cout || 0; });
+  const sorted = Object.entries(byC).sort((a,b) => b[1].conso - a[1].conso);
+  const maxC = sorted[0]?.[1]?.conso || 1;
+  const totalCo = dataAt.reduce((s,r) => s + (r.cout || 0), 0);
+
+  $('aTop').innerHTML = sorted.length ? sorted.slice(0,6).map(([k,v],i) => `
+    <div style="padding:5px 0;border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span class="a-name">${k.replace('Compteur ','')}</span>
+        <span class="a-val" style="color:#d97706">${fmt(v.conso)} kWh</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${(v.conso/maxC*100).toFixed(1)}%;background:${PAL[i]}"></div></div>
+    </div>`).join('') : '<div class="empty">Aucune donnée</div>';
+
+  $('aCout').innerHTML = sorted.length ? sorted.slice(0,6).map(([k,v]) => `
+    <div class="a-row">
+      <span class="a-name">${k.replace('Compteur ','')}</span>
+      <div style="text-align:right">
+        <div class="a-val" style="color:#6b7280">${fmt(v.cout, 0)} MAD</div>
+        <div style="font-size:10px;color:#9ca3af">${totalCo > 0 ? (v.cout/totalCo*100).toFixed(1) : 0}%</div>
+      </div>
+    </div>`).join('') : '<div class="empty">Aucune donnée</div>';
+
+  // Résumé par période — utiliser le général si disponible
+  const dataDate = filtered.filter(r => isGen(r)).length ? filtered.filter(r => isGen(r)) : dataAt;
+  const byD = {};
+  dataDate.forEach(r => { const k = periodKey(r.date); if (!byD[k]) byD[k] = { conso: 0, cout: 0, n: 0 }; byD[k].conso += r.conso || 0; byD[k].cout += r.cout || 0; byD[k].n++; });
+  const dDates = Object.entries(byD).sort((a,b) => b[0].localeCompare(a[0]));
+  $('aDate').innerHTML = dDates.length ? dDates.slice(0,6).map(([d,v]) => `
+    <div class="a-row">
+      <div>
+        <div style="font-size:12px;color:#374151;font-weight:600">${periodLabel(d)}</div>
+        <div style="font-size:10px;color:#9ca3af">${v.n} relevé(s)</div>
+      </div>
+      <div style="text-align:right">
+        <div class="a-val" style="color:#16a34a">${fmt(v.conso)} kWh</div>
+        <div style="font-size:10px;color:#9ca3af">${fmt(v.cout, 0)} MAD</div>
+      </div>
+    </div>`).join('') : '<div class="empty">Aucune donnée</div>';
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// TABLE
+// ────────────────────────────────────────────────────────────────────────────
+function updateTable() {
+  const tb = $('tBody');
+  if (!filtered.length) { tb.innerHTML = '<tr><td colspan="8"><div class="empty">Aucun relevé</div></td></tr>'; return; }
+  tb.innerHTML = [...filtered].sort((a,b) => b.date.localeCompare(a.date)).map(r => `
+    <tr>
+      <td style="white-space:nowrap">${dispDate(r.date)}</td>
+      <td><span class="tag ${tagCls(r.compteur)}">${r.compteur.replace('Compteur ','')}</span></td>
+      <td style="color:#6b7280">${fmt(r.debut)}</td>
+      <td style="color:#6b7280">${fmt(r.fin)}</td>
+      <td style="font-weight:700;color:#d97706">${fmt(r.conso, 1)} kWh</td>
+      <td style="color:#6b7280">${(r.prix||0).toFixed(3)}</td>
+      <td style="font-weight:700;color:#2563eb">${fmt(r.cout, 2)} MAD</td>
+      <td style="display:flex;gap:4px;align-items:center">
+          <button class="edit-btn" onclick="openEditModal(${r.id})" title="Modifier">✏️</button>
+          <button class="del-btn" onclick="delRow(${r.id})" title="Supprimer">✕</button>
+        </td>
+    </tr>`).join('');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────────────────────────────────
+function render() { updateKPIs(); updateCharts(); updateAnalysis(); updateTable(); }
+
+// ────────────────────────────────────────────────────────────────────────────
+// ADD RELEVE MODAL
+// ────────────────────────────────────────────────────────────────────────────
+function openAddModal() {
+  $('mDate').value = yesterday();
+  $('aComp').value = '';
+  $('aDeb').value = '';
+  $('aFin').value = '';
+  $('aCons').value = '';
+  $('aCoutF').value = '';
+  $('aPrix').value = '1.1';
+  $('lastInfo').style.display = 'none';
+  $('addOverlay').classList.add('open');
+  // Focus sur le sélecteur de compteur
+  setTimeout(() => $('aComp').focus(), 150);
+}
+
+function closeAddModal() { $('addOverlay').classList.remove('open'); }
+$('addOverlay').addEventListener('click', e => { if (e.target === $('addOverlay')) closeAddModal(); });
+
+function nextDay(dateStr) {
+  // Retourne la date J+1 à partir d'une string YYYY-MM-DD
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
+function fmtInput(el) {
+  // Séparateur de milliers (espace) pour nombres entiers/décimaux
+  const raw = el.value.replace(/\s/g, '').replace(/[^0-9.]/g, '');
+  if (!raw) return;
+  const parts = raw.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' '); // espace insécable
+  const pos = el.selectionStart;
+  el.value = parts.join('.');
+}
+
+function fmtInputDec(el) {
+  // Pour le prix : garder les décimales, pas de séparateur de milliers
+  const raw = el.value.replace(/[^0-9.]/g, '');
+  el.value = raw;
+}
+
+function parseInput(el) {
+  // Lire la valeur numérique depuis un input formaté
+  return parseFloat(String(el.value).replace(/\s| /g, '')) || 0;
+}
+
+function onCompChange() {
+  const comp = $('aComp').value;
+  if (!comp) { $('lastInfo').style.display = 'none'; return; }
+  const rows = allData.filter(r => r.compteur === comp && r.fin > 0).sort((a,b) => b.date.localeCompare(a.date));
+  if (rows.length) {
+    const last = rows[0];
+    // Date = J+1 du dernier relevé
+    $('mDate').value = nextDay(last.date);
+    // Index début = dernier index fin, formaté avec séparateurs
+    $('aDeb').value = fmtNum(last.fin);
+    $('lastVal').textContent = fmtNum(last.fin);
+    $('lastDate').textContent = dispDate(last.date);
+    $('lastInfo').style.display = 'block';
+    calcAdd();
+  } else {
+    $('aDeb').value = '';
+    $('lastInfo').style.display = 'none';
+  }
+}
+
+function calcAdd() {
+  const d = parseInput($('aDeb'));
+  const f = parseInput($('aFin'));
+  const p = parseInput($('aPrix'));
+  const conso = Math.max(0, Math.round((f - d) * 100) / 100);
+  const cout = conso && p ? Math.round(conso * p * 100) / 100 : 0;
+  // Afficher avec séparateurs
+  $('aCons').value = conso ? fmtNum(conso) : '';
+  $('aCoutF').value = cout ? fmtNum(cout) : '';
+}
+
+function saveNewReleve() {
+  const date = $('mDate').value;
+  const compteur = $('aComp').value;
+  const debut = parseInput($('aDeb'));
+  const fin = parseInput($('aFin'));
+  const prix = parseInput($('aPrix'));
+  if (!date || !compteur || isNaN(debut) || isNaN(fin) || isNaN(prix)) { toast('Remplissez tous les champs.', 'e'); return; }
+  if (fin <= debut) { toast('Index fin doit être > index début.', 'e'); return; }
+  const conso = Math.round((fin - debut) * 100) / 100;
+  const cout = Math.round(conso * prix * 100) / 100;
+  const id = allData.length ? Math.max(...allData.map(r => r.id)) + 1 : 1;
+  allData.push({ id, date, compteur, debut, fin, conso, prix, cout });
+  pushHistory();
+  saveLocal();
+  populateFilters();
+  filtered = [...allData];
+  applyFilters();
+  closeAddModal();
+  toast('Relevé ajouté et enregistré !', 's');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// EDIT RELEVE MODAL
+// ────────────────────────────────────────────────────────────────────────────
+function openEditModal(id) {
+  const r = allData.find(row => row.id === id);
+  if (!r) return;
+  $('editId').value = id;
+  $('eDate').value = r.date;
+  $('eComp').value = r.compteur;
+  // Index avec séparateurs
+  $('eDeb').value = fmtNum(r.debut);
+  $('eFin').value = fmtNum(r.fin);
+  $('ePrix').value = r.prix;
+  $('eCons').value = fmtNum(r.conso);
+  $('eCout').value = fmtNum(r.cout);
+  $('editOverlay').classList.add('open');
+}
+
+function closeEditModal() { $('editOverlay').classList.remove('open'); }
+$('editOverlay').addEventListener('click', e => { if (e.target === $('editOverlay')) closeEditModal(); });
+
+function calcEdit() {
+  const d = parseInput($('eDeb'));
+  const f = parseInput($('eFin'));
+  const p = parseInput($('ePrix'));
+  const conso = Math.max(0, Math.round((f - d) * 100) / 100);
+  const cout = conso && p ? Math.round(conso * p * 100) / 100 : 0;
+  $('eCons').value = conso ? fmtNum(conso) : '';
+  $('eCout').value = cout ? fmtNum(cout) : '';
+}
+
+function fmtNum(n) {
+  // Formater un nombre avec séparateur espace et décimales si nécessaire
+  const num = Number(n);
+  if (isNaN(num)) return '';
+  const hasDec = num % 1 !== 0;
+  return num.toLocaleString('fr-FR', { minimumFractionDigits: hasDec ? 2 : 0, maximumFractionDigits: hasDec ? 2 : 0 });
+}
+
+function saveEditReleve() {
+  const id = parseInt($('editId').value);
+  const date = $('eDate').value;
+  const compteur = $('eComp').value;
+  const debut = parseInput($('eDeb'));
+  const fin = parseInput($('eFin'));
+  const prix = parseInput($('ePrix'));
+  if (!date || !compteur || isNaN(debut) || isNaN(fin) || isNaN(prix)) { toast('Remplissez tous les champs.', 'e'); return; }
+  if (fin <= debut) { toast('Index fin doit être > index début.', 'e'); return; }
+  const conso = Math.round((fin - debut) * 100) / 100;
+  const cout = Math.round(conso * prix * 100) / 100;
+  const idx = allData.findIndex(r => r.id === id);
+  if (idx === -1) { toast('Relevé introuvable.', 'e'); return; }
+  allData[idx] = { id, date, compteur, debut, fin, conso, prix, cout };
+  pushHistory();
+  saveLocal();
+  filtered = [...allData];
+  applyFilters();
+  closeEditModal();
+  toast('Relevé modifié et enregistré !', 's');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DELETE / CLEAR
+// ────────────────────────────────────────────────────────────────────────────
+function delRow(id) {
+  if (!confirm('Supprimer ce relevé ?')) return;
+  allData = allData.filter(r => r.id !== id);
+  filtered = filtered.filter(r => r.id !== id);
+  pushHistory();
+  saveLocal();
+  applyFilters();
+  toast('Relevé supprimé.', 'i');
+}
+
+function clearAll() {
+  if (!confirm('Effacer TOUTES les données ? Cette action est irréversible.')) return;
+  allData = []; filtered = [];
+  localStorage.removeItem(SK);
+  location.reload();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ANALYSIS MODAL
+// ────────────────────────────────────────────────────────────────────────────
+function openAnalysis() {
+  if (!filtered.length) { toast('Aucune donnée à analyser.', 'e'); return; }
+  $('analysisOverlay').classList.add('open');
+  $('analysisContent').innerHTML = '<div class="loading"><div class="spinner"></div>Analyse en cours...</div>';
+  setTimeout(() => { $('analysisContent').innerHTML = buildAnalysis(); }, 350);
+}
+
+function buildAnalysis() {
+  const dataGen = filtered.filter(r => isGen(r));
+  const dataAt = filtered.filter(r => !isGen(r));
+  const dataTrend = dataGen.length ? dataGen : dataAt;
+
+  const byDate = {};
+  dataTrend.forEach(r => { const k = periodKey(r.date); if (!byDate[k]) byDate[k] = { conso: 0, cout: 0 }; byDate[k].conso += r.conso || 0; byDate[k].cout += r.cout || 0; });
+  const dates = Object.keys(byDate).sort();
+
+  const byComp = {};
+  dataAt.forEach(r => { if (!byComp[r.compteur]) byComp[r.compteur] = { conso: 0, cout: 0 }; byComp[r.compteur].conso += r.conso || 0; byComp[r.compteur].cout += r.cout || 0; });
+  const sortedAt = Object.entries(byComp).sort((a,b) => b[1].conso - a[1].conso);
+  const totalCons = dataAt.reduce((s,r) => s + (r.conso || 0), 0);
+  const totalCout = dataAt.reduce((s,r) => s + (r.cout || 0), 0);
+  const avgPrix = totalCons > 0 ? totalCout / totalCons : 0;
+
+  // Trends
+  const trends = [];
+  for (let i = 1; i < dates.length; i++) {
+    const prev = byDate[dates[i-1]], curr = byDate[dates[i]];
+    const diff = curr.conso - prev.conso;
+    const pct = prev.conso > 0 ? diff / prev.conso * 100 : 0;
+    trends.push({ from: dates[i-1], to: dates[i], prev: prev.conso, curr: curr.conso, diff, pct });
+  }
+
+  let globalTrend = 'stable';
+  if (trends.length >= 2) {
+    const ups = trends.filter(t => t.diff > 0).length;
+    const downs = trends.filter(t => t.diff < 0).length;
+    if (ups > downs && ups / trends.length >= 0.6) globalTrend = 'hausse';
+    else if (downs > ups && downs / trends.length >= 0.6) globalTrend = 'baisse';
+  }
+
+  let html = '';
+
+  // Résumé général
+  html += `<div class="stitle">📊 Résumé général</div>`;
+  if (globalTrend === 'hausse') html += `<div class="alert-box a-red"><div class="ai">📈</div><div class="at"><strong>Tendance HAUSSE</strong>La consommation augmente sur la période analysée. Surveillance recommandée.</div></div>`;
+  else if (globalTrend === 'baisse') html += `<div class="alert-box a-green"><div class="ai">📉</div><div class="at"><strong>Tendance BAISSE ✓</strong>La consommation diminue. Les efforts d'optimisation portent leurs fruits.</div></div>`;
+  else html += `<div class="alert-box a-blue"><div class="ai">➡️</div><div class="at"><strong>Tendance STABLE</strong>La consommation reste constante d'une période à l'autre.</div></div>`;
+
+  const lastT = trends.length ? trends[trends.length - 1] : null;
+  if (lastT) {
+    const sign = lastT.diff > 0 ? 'augmenté' : 'diminué';
+    const cls = lastT.diff > 0 ? 'a-red' : 'a-green';
+    const ico = lastT.diff > 0 ? '⚠️' : '✅';
+    html += `<div class="alert-box ${cls}"><div class="ai">${ico}</div><div class="at"><strong>Dernier écart</strong>Conso ${sign} de ${fmt(Math.abs(lastT.diff))} kWh (${Math.abs(lastT.pct).toFixed(1)}%) entre ${periodLabel(lastT.from)} et ${periodLabel(lastT.to)}.</div></div>`;
+  }
+
+  // Évolution période par période
+  if (trends.length) {
+    html += `<div class="stitle">📅 Évolution période par période</div>`;
+    html += `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:4px 12px">`;
+    trends.forEach(t => {
+      const pillCls = t.diff > 0 ? 'pup' : t.diff < 0 ? 'pdown' : 'peq';
+      const pillTxt = t.diff > 0 ? `▲ +${t.pct.toFixed(1)}%` : t.diff < 0 ? `▼ ${t.pct.toFixed(1)}%` : '= 0%';
+      const rem = t.diff > 0 ? `⚠️ Hausse ${fmt(t.diff)} kWh` : t.diff < 0 ? `✅ Économie ${fmt(Math.abs(t.diff))} kWh` : 'Stable';
+      html += `<div class="trend-row">
+        <div>
+          <div style="font-size:10px;color:#6b7280">${periodLabel(t.from)} → ${periodLabel(t.to)}</div>
+          <div style="font-size:11px;color:#374151;margin-top:1px">${rem}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:10px">
+          <span class="pill ${pillCls}">${pillTxt}</span>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px">${fmt(t.curr)} kWh</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Ateliers
+  html += `<div class="stitle">🏭 Analyse par atelier</div>`;
+  if (sortedAt.length) {
+    const top = sortedAt[0];
+    const topPct = (totalCons > 0 ? top[1].conso / totalCons * 100 : 0).toFixed(1);
+    html += `<div class="alert-box a-yellow"><div class="ai">🔦</div><div class="at"><strong>Plus gros consommateur : ${top[0].replace('Compteur ','')}</strong>${fmt(top[1].conso)} kWh — ${topPct}% du total ateliers.</div></div>`;
+    if (parseFloat(topPct) > 50) html += `<div class="alert-box a-red"><div class="ai">🚨</div><div class="at"><strong>Déséquilibre détecté</strong>Un seul atelier dépasse 50% de la consommation. Audit prioritaire recommandé.</div></div>`;
+  }
+
+  // Recommandations
+  html += `<div class="stitle">💡 Axes d'amélioration</div>`;
+  const recs = [
+    ['🔌','Sous-compteurs par machine','Identifier les équipements énergivores avec des compteurs individuels pour cibler les économies.'],
+    ['🕐','Surveiller les pics horaires','Mettre en place un suivi horaire pour détecter la surconsommation hors production (nuit, week-end).'],
+    ['🔧','Maintenance préventive','Une machine mal entretenue consomme jusqu\'à 20% de plus. Planifier des révisions régulières.'],
+    ['💡','Migration éclairage LED','Réduire la consommation d\'éclairage de 50-70% avec des LED industrielles.'],
+    ['📅','Objectif de réduction mensuel','Fixer un seuil cible (ex: −5%/trimestre) et suivre l\'écart réel/objectif à chaque relevé.'],
+    ['⚡','Optimiser le facteur de puissance','Un mauvais cos φ entraîne des pénalités. Installer des batteries de condensateurs.'],
+  ];
+  if (globalTrend === 'hausse') recs.unshift(['🚨','ACTION PRIORITAIRE','La conso est en hausse. Identifier immédiatement l\'atelier responsable et planifier une inspection.']);
+  if (sortedAt.length) {
+    const top = sortedAt[0];
+    const eco = fmt(top[1].conso * 0.1 * avgPrix, 0);
+    recs.push(['🎯',`Focus : ${top[0].replace('Compteur ','')}`,`10% d'économie sur cet atelier = environ ${eco} MAD d'économie.`]);
+  }
+  recs.forEach(([icon, title, text]) => {
+    html += `<div class="rec-card"><div style="font-size:15px;flex-shrink:0">${icon}</div><div><strong style="display:block;font-size:12px;color:#1a1a2e;margin-bottom:2px">${title}</strong><span style="font-size:11px;color:#6b7280">${text}</span></div></div>`;
+  });
+
+  // Stats chiffrées
+  html += `<div class="stitle">📈 Chiffres clés</div>`;
+  html += `<div class="stat-grid">`;
+  [
+    ['Conso totale ateliers', `${fmt(totalCons)} kWh`, '#d97706'],
+    ['Coût total ateliers', `${fmt(totalCout, 0)} MAD`, '#2563eb'],
+    ['Prix moyen / kWh', `${avgPrix.toFixed(3)} MAD`, '#16a34a'],
+    ['Relevés analysés', `${filtered.length}`, '#374151'],
+    ['Ateliers actifs', `${sortedAt.length}`, '#7c3aed'],
+    ['Conso moy / relevé', `${fmt(totalCons / Math.max(dataAt.length, 1))} kWh`, '#6b7280'],
+  ].forEach(([lbl, val, col]) => {
+    html += `<div class="stat-box"><div class="stat-lbl">${lbl}</div><div class="stat-val" style="color:${col}">${val}</div></div>`;
+  });
+  html += '</div>';
+
+  return html;
+}
+
+
+// ── INIT ────────────────────────────────────────────────────────────────
+$('hDate').textContent = new Date().toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+// Raccourcis clavier Ctrl+Z / Ctrl+Y
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
+});
+
+// Remplir les selects de compteurs au chargement
+fillCompSelects();
+
+const saved = loadLocal();
+if (saved && saved.length) {
+  allData = saved; filtered = [...allData];
+  // Initialiser l'historique avec l'état chargé
+  history = [JSON.stringify(allData)]; historyIdx = 0;
+  updateUndoRedo();
+  showDash(); populateFilters(); applyFilters();
+  setMsg(`${saved.length} relevé(s) depuis la mémoire locale`);
+}
+
+
+</script>
+</body>
+</html>

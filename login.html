@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — Portail Odyssée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="assets/auth.js"></script>
+<script>
+  // Si déjà connecté, on file directement à l'accueil
+  (function () {
+    if (odyGetSession()) {
+      window.location.replace("index.html");
+    }
+  })();
+</script>
+<style>
+  :root {
+    --navy: #1B2430;
+    --navy-panel: #232E3D;
+    --steel: #3A6EA5;
+    --orange: #E8590C;
+    --text-light: #E8ECF1;
+    --text-muted: #8B96A5;
+    --border: #2E3B4C;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--navy);
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-light);
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Grille industrielle en fond, discrète */
+  body::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 42px 42px;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 380px;
+    margin: 20px;
+    background: var(--navy-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 40px 36px 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .led {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 8px var(--orange);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .brand {
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 4px 0 4px;
+    color: var(--text-light);
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 28px;
+    font-weight: 500;
+  }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field { margin-bottom: 18px; }
+  input {
+    width: 100%;
+    background: #1A222E;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 13px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input:focus {
+    border-color: var(--steel);
+  }
+  button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--orange);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  .error {
+    display: none;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(232, 89, 12, 0.12);
+    border: 1px solid rgba(232, 89, 12, 0.4);
+    border-radius: 6px;
+    color: #FF9A62;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .footer-note {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+  <div class="panel">
+    <div class="brand-row">
+      <span class="led"></span>
+      <span class="brand">Odyssée</span>
+    </div>
+    <h1>Portail de supervision</h1>
+    <p class="subtitle">Connectez-vous pour accéder à vos dashboards</p>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="user">Identifiant</label>
+        <input type="text" id="user" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="pass">Mot de passe</label>
+        <input type="password" id="pass" autocomplete="current-password" required>
+      </div>
+      <button type="submit">Se connecter</button>
+      <div class="error" id="errorBox">Identifiant ou mot de passe incorrect.</div>
+    </form>
+
+    <div class="footer-note">Usine Odyssée — Accès réservé au personnel autorisé</div>
+  </div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const user = document.getElementById('user').value;
+    const pass = document.getElementById('pass').value;
+    const ok = odyLogin(user, pass);
+    if (ok) {
+      window.location.href = 'index.html';
+    } else {
+      document.getElementById('errorBox').style.display = 'block';
+    }
+  });
+</script>
+
+</body>
+</html>
