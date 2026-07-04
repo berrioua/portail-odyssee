@@ -15,9 +15,9 @@
    ============================================================ */
 
 const ODY_ACCOUNTS = [
-  { user: "zak",     pass: "change-moi-1", name: "Zak" },
-  { user: "atelier1", pass: "change-moi-2", name: "Atelier 1" },
-  { user: "atelier2", pass: "change-moi-3", name: "Atelier 2" },
+  { user: "zak",     pass: "ymWPPkzAVu", name: "Zak" },
+  { user: "atelier1", pass: "37tsuCIRP8", name: "Atelier 1" },
+  { user: "atelier2", pass: "be8mi3elh6", name: "Atelier 2" },
 ];
 
 const ODY_SESSION_KEY = "ody_portal_session";
