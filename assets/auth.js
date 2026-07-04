@@ -15,9 +15,9 @@
    ============================================================ */
 
 const ODY_ACCOUNTS = [
-  { user: "Samir",    pass: "tHkZYfVcBF", name: "Samir" },
-  { user: "Benamira", pass: "2m7BkWa62I", name: "Benamira" },
-  { user: "Bachir",   pass: "3UMkRT5yHL", name: "Bachir" },
+  { user: "Samir",    pass: "Samir", name: "Samir" },
+  { user: "Benamira", pass: "Benamira", name: "Benamira" },
+  { user: "Bachir",   pass: "Bachir", name: "Bachir" },
 ];
 
 const ODY_SESSION_KEY = "ody_portal_session";
